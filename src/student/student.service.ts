@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from './entities/student.entity';
@@ -14,13 +14,26 @@ export class StudentService {
     private classRepo: Repository<Class>,
   ) {}
 
-  async findOne(id: number): Promise<Student> {
-    const student = await this.studentRepo.findOne({
-      where: { id },
-      relations: ['classes'],
-    });
-    if (!student) throw new NotFoundException('Student not found');
-    return student;
+
+
+  async findAll() {
+    try {
+      const allStudents = await this.studentRepo
+        .createQueryBuilder("student")
+        .leftJoinAndSelect("student.class", "class")
+        .getMany();
+      return allStudents;
+    } catch (error) {
+      throw new HttpException(
+        `Error finding services : ${error}`,
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  async create(name: string, address: string): Promise<Student> {
+    const student = this.studentRepo.create({ name, address });
+    return this.studentRepo.save(student);
   }
 
   async assignClasses(studentId: number, classIds: number[]): Promise<Student> {
@@ -35,4 +48,13 @@ export class StudentService {
 
     return this.studentRepo.save(student);
   }
+
+  // async findOne(id: number): Promise<Student> {
+  //   const student = await this.studentRepo.findOne({
+  //     where: { id },
+  //     relations: ['classes'],
+  //   });
+  //   if (!student) throw new NotFoundException('Student not found');
+  //   return student;
+  // }
 }

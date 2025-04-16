@@ -5,9 +5,19 @@ import { StudentService } from './student.service';
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
-  @Get(':id')
-  getStudent(@Param('id') id: string) {
-    return this.studentService.findOne(+id);
+  @Get()
+  getAllStudents() {
+    return this.studentService.findAll();
+  }
+
+  // @Get(':id')
+  // getStudent(@Param('id') id: string) {
+  //   return this.studentService.findOne(+id);
+  // }
+
+  @Post()
+  createStudent(@Body() body: { name: string; address: string }) {
+    return this.studentService.create(body.name, body.address);
   }
 
   @Post(':id/classes')
